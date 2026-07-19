@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CFQ — Kuesioner Pola Pemberian Makan · CANTIK UNJA</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root {
+  --teal:      #1B6B5A;
+  --teal-mid:  #2D8F76;
+  --teal-light:#E6F5F1;
+  --teal-pale: #F0FAF7;
+  --coral:     #D85A30;
+  --coral-l:   #FAEDE7;
+  --amber:     #C97B2A;
+  --amber-l:   #FEF4E4;
+  --navy:      #1A2E3B;
+  --text-1:    #1A2E3B;
+  --text-2:    #4A5E6A;
+  --text-3:    #8FA2AE;
+  --border:    #D6E4E0;
+  --bg:        #F4FAF8;
+  --white:     #FFFFFF;
+  --shadow:    0 2px 12px rgba(27,107,90,.10);
+  --shadow-lg: 0 8px 32px rgba(27,107,90,.14);
+  --r:         12px;
+  --r-sm:      8px;
+
+  /* score colors */
+  --ss-bg:#E6F5F1; --ss-txt:#0E5040; --ss-bdr:#2D8F76;
+  --s-bg:#EDF5FF;  --s-txt:#174A7E;  --s-bdr:#3B82F6;
+  --j-bg:#FEF9EC;  --j-txt:#78500A;  --j-bdr:#F59E0B;
+  --tp-bg:#FEF2F2; --tp-txt:#7F1D1D; --tp-bdr:#EF4444;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text-1);
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.app-header {
+  background: var(--teal);
+  padding: 16px 20px 14px;
+  display: flex; align-items: center; gap: 12px;
+}
+.app-logo {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: rgba(255,255,255,.18);
+  display: grid; place-items: center;
+  font-size: 20px;
+}
+.app-title { color: #fff; }
+.app-title h1 { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; letter-spacing:.3px; }
+.app-title p  { font-size: 11px; opacity: .75; margin-top: 1px; }
+.app-badge {
+  background: rgba(255,255,255,.18);
+  color: #fff; font-size: 10px; font-weight: 700;
+  padding: 4px 10px; border-radius: 999px;
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.header-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.saved-btn {
+  position: relative;
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.18);
+  border: none; color: #fff;
+  font-family: inherit; font-size: 11px; font-weight: 700;
+  padding: 7px 12px; border-radius: 999px;
+  cursor: pointer; transition: background .2s;
+}
+.saved-btn:hover { background: rgba(255,255,255,.3); }
+.saved-count {
+  background: var(--coral); color: #fff;
+  font-size: 10px; font-weight: 800;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 999px; display: grid; place-items: center;
+}
+
+/* ── SAVED RECORDS OVERLAY ── */
+.saved-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: var(--bg);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.saved-overlay.show { display: flex; }
+.saved-hd {
+  background: var(--teal); color: #fff;
+  padding: 16px 20px; flex-shrink: 0;
+}
+.saved-hd-top { display: flex; align-items: center; gap: 12px; }
+.saved-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: rgba(255,255,255,.18); border: none; color: #fff;
+  font-size: 16px; cursor: pointer; display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.saved-hd h2 { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; }
+.saved-hd p { font-size: 11px; opacity: .75; margin-top: 1px; }
+.saved-toolbar {
+  display: flex; gap: 8px; margin-top: 14px;
+}
+.saved-search {
+  flex: 1; border: none; border-radius: var(--r-sm);
+  padding: 10px 12px; font-family: inherit; font-size: 13px;
+  outline: none; background: rgba(255,255,255,.95); color: var(--text-1);
+}
+.saved-export-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--coral); color: #fff; border: none;
+  border-radius: var(--r-sm); padding: 10px 14px;
+  font-family: inherit; font-size: 12px; font-weight: 700;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: background .2s;
+}
+.saved-export-btn:hover { background: #C24E27; }
+.saved-export-btn:disabled { opacity: .5; cursor: not-allowed; }
+.saved-body { flex: 1; overflow-y: auto; padding: 16px; max-width: 600px; margin: 0 auto; width: 100%; }
+
+.saved-empty {
+  text-align: center; padding: 60px 20px; color: var(--text-2);
+}
+.saved-empty .ic { font-size: 40px; margin-bottom: 10px; }
+.saved-empty p { font-size: 13px; }
+
+.saved-item {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r); box-shadow: var(--shadow);
+  padding: 14px 16px; margin-bottom: 10px;
+}
+.saved-item-top { display: flex; align-items: flex-start; gap: 10px; }
+.saved-item-name { font-size: 14px; font-weight: 700; color: var(--navy); }
+.saved-item-sub { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+.saved-item-cat {
+  margin-left: auto; flex-shrink: 0;
+  font-size: 10px; font-weight: 800; padding: 3px 10px;
+  border-radius: 999px; white-space: nowrap;
+}
+.saved-item-meta {
+  display: flex; gap: 14px; margin-top: 10px;
+  font-size: 11px; color: var(--text-2);
+}
+.saved-item-meta b { color: var(--navy); }
+.saved-item-actions { display: flex; gap: 8px; margin-top: 12px; }
+.saved-item-actions button {
+  flex: 1; padding: 8px; font-family: inherit; font-size: 11px; font-weight: 700;
+  border-radius: var(--r-sm); cursor: pointer; transition: all .2s;
+}
+.si-view { background: var(--teal-light); color: var(--teal); border: none; }
+.si-view:hover { background: var(--teal); color: #fff; }
+.si-xlsx { background: var(--amber-l); color: var(--amber); border: none; }
+.si-xlsx:hover { background: var(--amber); color: #fff; }
+.si-del { background: var(--coral-l); color: var(--coral); border: none; }
+.si-del:hover { background: var(--coral); color: #fff; }
+
+/* ── DETAIL MODAL ── */
+.detail-modal-bg {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(26,46,59,.55);
+  display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.detail-modal-bg.show { display: flex; }
+.detail-modal {
+  background: var(--white); border-radius: var(--r);
+  max-width: 480px; width: 100%; max-height: 85vh; overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+.detail-modal-hd {
+  background: var(--teal); color: #fff; padding: 16px 18px;
+  display: flex; align-items: center; gap: 10px;
+  position: sticky; top: 0;
+}
+.detail-modal-hd h3 { font-size: 15px; font-weight: 700; flex: 1; }
+.detail-modal-close {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(255,255,255,.18); border: none; color: #fff;
+  font-size: 14px; cursor: pointer;
+}
+.detail-modal-body { padding: 16px 18px; }
+.detail-row {
+  display: flex; justify-content: space-between; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid #F1F7F5;
+  font-size: 12px;
+}
+.detail-row span:first-child { color: var(--text-2); font-weight: 600; }
+.detail-row span:last-child { color: var(--navy); font-weight: 700; text-align: right; }
+.detail-note {
+  margin-top: 10px; background: var(--teal-pale); border-radius: var(--r-sm);
+  padding: 10px 12px; font-size: 12px; color: var(--text-1); line-height: 1.5;
+}
+
+/* ── STEP BAR ── */
+.step-wrap {
+  background: var(--teal);
+  padding: 0 20px 18px;
+}
+.step-bar {
+  display: flex; gap: 4px;
+}
+.step-seg {
+  flex: 1; height: 4px; border-radius: 99px;
+  background: rgba(255,255,255,.25);
+  transition: background .3s;
+}
+.step-seg.done { background: rgba(255,255,255,.9); }
+.step-seg.active { background: #fff; }
+
+.step-labels {
+  display: flex; justify-content: space-between;
+  padding: 6px 0 0;
+}
+.step-lbl {
+  font-size: 10px; color: rgba(255,255,255,.65); font-weight: 500;
+  transition: color .3s;
+}
+.step-lbl.active { color: #fff; font-weight: 700; }
+
+/* ── MAIN ── */
+.main { padding: 20px 16px 100px; max-width: 600px; margin: 0 auto; }
+
+/* ── PAGES ── */
+.page { display: none; animation: fadeUp .35s ease both; }
+.page.active { display: block; }
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(14px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ── SECTION HEADER ── */
+.sec-hd {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+}
+.sec-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--teal-light);
+  display: grid; place-items: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.sec-hd h2 { font-size: 16px; font-weight: 700; color: var(--navy); }
+.sec-hd p  { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+
+/* ── PATIENT CARD ── */
+.patient-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.patient-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.field-group { display: flex; flex-direction: column; gap: 5px; }
+.field-group label { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing:.04em; }
+.field-group input, .field-group select {
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 9px 12px;
+  font-family: inherit; font-size: 13px;
+  color: var(--text-1);
+  background: var(--white);
+  outline: none;
+  transition: border-color .2s;
+}
+.field-group input:focus, .field-group select:focus { border-color: var(--teal-mid); }
+.field-group.full { grid-column: 1 / -1; }
+
+/* ── DOMAIN CARD ── */
+.domain-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.domain-head {
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.domain-badge {
+  font-size: 10px; font-weight: 800;
+  padding: 3px 10px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.domain-badge.jenis  { background: var(--teal-light); color: var(--teal); }
+.domain-badge.jumlah { background: var(--amber-l); color: var(--amber); }
+.domain-badge.frek   { background: var(--coral-l); color: var(--coral); }
+.domain-head h3 { font-size: 14px; font-weight: 700; color: var(--navy); }
+.domain-head span { font-size: 12px; color: var(--text-2); margin-left: auto; }
+
+/* ── QUESTION ROW ── */
+.q-row {
+  padding: 12px 16px;
+  border-bottom: 1px solid #F1F7F5;
+  display: flex; flex-direction: column; gap: 9px;
+}
+.q-row:last-child { border-bottom: none; }
+.q-num-text { display: flex; gap: 10px; }
+.q-num {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: var(--teal-light); color: var(--teal);
+  font-size: 11px; font-weight: 800;
+  display: grid; place-items: center; flex-shrink: 0; margin-top: 1px;
+}
+.q-text { font-size: 13px; line-height: 1.55; color: var(--text-1); }
+
+/* ── RADIO GROUP ── */
+.radio-grp {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 5px;
+  margin-left: 32px;
+}
+.radio-btn { position: relative; }
+.radio-btn input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
+.radio-btn label {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 7px 4px 6px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .2s;
+  font-size: 11px; font-weight: 600;
+  color: var(--text-2);
+  gap: 2px;
+}
+.radio-btn label .score-pill {
+  font-size: 9px; font-weight: 700;
+  padding: 1px 5px; border-radius: 99px;
+  background: var(--bg); color: var(--text-3);
+}
+
+/* SS */
+.radio-btn input[value="4"]:checked + label {
+  background: var(--ss-bg); border-color: var(--ss-bdr); color: var(--ss-txt);
+}
+.radio-btn input[value="4"]:checked + label .score-pill { background: var(--ss-bdr); color: #fff; }
+/* S */
+.radio-btn input[value="3"]:checked + label {
+  background: var(--s-bg); border-color: var(--s-bdr); color: var(--s-txt);
+}
+.radio-btn input[value="3"]:checked + label .score-pill { background: var(--s-bdr); color: #fff; }
+/* J */
+.radio-btn input[value="2"]:checked + label {
+  background: var(--j-bg); border-color: var(--j-bdr); color: var(--j-txt);
+}
+.radio-btn input[value="2"]:checked + label .score-pill { background: var(--j-bdr); color: #fff; }
+/* TP */
+.radio-btn input[value="1"]:checked + label {
+  background: var(--tp-bg); border-color: var(--tp-bdr); color: var(--tp-txt);
+}
+.radio-btn input[value="1"]:checked + label .score-pill { background: var(--tp-bdr); color: #fff; }
+
+/* ── NAVIGATION BUTTONS ── */
+.nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex; gap: 10px;
+  max-width: 600px; margin: 0 auto;
+}
+.btn {
+  flex: 1; padding: 13px;
+  border: none; border-radius: var(--r-sm);
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all .2s;
+}
+.btn-outline {
+  background: transparent; border: 1.5px solid var(--border);
+  color: var(--text-2);
+}
+.btn-outline:hover { border-color: var(--teal-mid); color: var(--teal); }
+.btn-primary {
+  background: var(--teal); color: #fff;
+}
+.btn-primary:hover { background: var(--teal-mid); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ── RESULT PAGE ── */
+.result-hero {
+  background: var(--teal);
+  border-radius: var(--r);
+  padding: 24px 20px;
+  text-align: center;
+  color: #fff;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-lg);
+}
+.result-hero .score-big { font-size: 56px; font-weight: 800; line-height: 1; }
+.result-hero .score-of  { font-size: 16px; opacity: .7; margin-top: 4px; }
+.result-hero .result-cat {
+  margin: 12px auto 0;
+  display: inline-block;
+  background: rgba(255,255,255,.2);
+  padding: 6px 18px; border-radius: 99px;
+  font-size: 15px; font-weight: 700;
+}
+.result-hero .result-desc { font-size: 13px; opacity: .85; margin-top: 8px; line-height: 1.5; }
+
+.domain-scores {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.domain-score-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #F1F7F5;
+}
+.domain-score-row:last-child { border-bottom: none; }
+.ds-label { flex: 1; font-size: 13px; font-weight: 600; color: var(--navy); }
+.ds-sub   { font-size: 11px; color: var(--text-2); font-weight: 400; }
+.ds-score { font-size: 16px; font-weight: 800; color: var(--teal); }
+.ds-max   { font-size: 11px; color: var(--text-3); }
+.ds-bar-wrap { width: 80px; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.ds-bar { height: 100%; border-radius: 99px; background: var(--teal-mid); transition: width .8s cubic-bezier(.4,0,.2,1); }
+
+.rec-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.rec-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.rec-item {
+  display: flex; gap: 8px;
+  font-size: 12px; line-height: 1.55; color: var(--text-1);
+  padding: 7px 0;
+  border-bottom: 1px solid #F1F7F5;
+}
+.rec-item:last-child { border-bottom: none; }
+.rec-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); margin-top: 5px; flex-shrink: 0; }
+
+.save-btn {
+  width: 100%; padding: 15px;
+  background: var(--teal); color: #fff;
+  border: none; border-radius: var(--r-sm);
+  font-family: inherit; font-size: 15px; font-weight: 700;
+  cursor: pointer; margin-top: 8px;
+  transition: background .2s;
+}
+.save-btn:hover { background: var(--teal-mid); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--navy); color: #fff;
+  padding: 10px 20px; border-radius: 999px;
+  font-size: 13px; font-weight: 600;
+  opacity: 0; transition: all .3s; pointer-events: none; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── LEGEND ── */
+.legend {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.leg-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; color: var(--text-2);
+}
+.leg-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+/* unanswered highlight */
+.q-row.unanswered { background: #FEF2F2; }
+.q-row.unanswered .q-num { background: #FECACA; color: #991B1B; }
+
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="app-header">
+  <div class="app-logo">🥗</div>
+  <div class="app-title">
+    <h1>CANTIK UNJA</h1>
+    <p>Child Feeding Questionnaire (CFQ)</p>
+  </div>
+  <div class="header-actions">
+    <div class="app-badge">CFQ</div>
+    <button class="saved-btn" onclick="openSaved()">📂 Tersimpan <span class="saved-count" id="savedCount">0</span></button>
+  </div>
+</div>
+
+<!-- ── STEP BAR ── -->
+<div class="step-wrap">
+  <div class="step-bar">
+    <div class="step-seg active" id="seg0"></div>
+    <div class="step-seg" id="seg1"></div>
+    <div class="step-seg" id="seg2"></div>
+    <div class="step-seg" id="seg3"></div>
+    <div class="step-seg" id="seg4"></div>
+  </div>
+  <div class="step-labels">
+    <span class="step-lbl active" id="lbl0">Data</span>
+    <span class="step-lbl" id="lbl1">Jenis</span>
+    <span class="step-lbl" id="lbl2">Jumlah</span>
+    <span class="step-lbl" id="lbl3">Frekuensi</span>
+    <span class="step-lbl" id="lbl4">Hasil</span>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- PAGE 0: DATA BALITA -->
+  <div class="page active" id="page0">
+    <div class="sec-hd">
+      <div class="sec-icon">👶</div>
+      <div>
+        <h2>Data Balita</h2>
+        <p>Identitas anak dan orang tua/pengasuh</p>
+      </div>
+    </div>
+    <div class="patient-card">
+      <div class="patient-grid">
+        <div class="field-group full">
+          <label>Nama Balita</label>
+          <input type="text" id="namaBalita" placeholder="Nama lengkap anak">
+        </div>
+        <div class="field-group">
+          <label>Jenis Kelamin</label>
+          <select id="jenisKelamin">
+            <option value="">-- Pilih --</option>
+            <option value="L">Laki-laki</option>
+            <option value="P">Perempuan</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Tanggal Lahir</label>
+          <input type="date" id="tglLahir" onchange="hitungUsia()">
+        </div>
+        <div class="field-group">
+          <label>Tanggal Periksa</label>
+          <input type="date" id="tglPeriksa" onchange="hitungUsia()">
+        </div>
+        <div class="field-group">
+          <label>Usia Saat Ini</label>
+          <input type="text" id="usiaField" placeholder="Otomatis" readonly style="background:#F4FAF8;color:var(--teal);font-weight:700;">
+        </div>
+        <div class="field-group full">
+          <label>Nama Orang Tua / Pengasuh</label>
+          <input type="text" id="namaOtua" placeholder="Nama ibu/ayah/pengasuh">
+        </div>
+        <div class="field-group full">
+          <label>Puskesmas</label>
+          <select id="puskesmas">
+            <option value="">-- Pilih Puskesmas --</option>
+            <option>Talang Banjar</option>
+            <option>Tanjung Pinang</option>
+            <option>Payo Selincah</option>
+            <option>Pakuan Baru</option>
+            <option>Olak Kemang</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 1: JENIS MAKANAN -->
+  <div class="page" id="page1">
+    <div class="sec-hd">
+      <div class="sec-icon">🍱</div>
+      <div>
+        <h2>Jenis Makanan</h2>
+        <p>Pertanyaan 1–5 · pilih frekuensi yang sesuai</p>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot" style="background:var(--ss-bdr)"></div> SS = Sangat Sering (4)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--s-bdr)"></div> S = Sering (3)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--j-bdr)"></div> J = Jarang (2)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--tp-bdr)"></div> TP = Tidak Pernah (1)</div>
+    </div>
+
+    <div class="domain-card">
+      <div class="domain-head">
+        <div class="domain-badge jenis">Jenis</div>
+        <h3>Jenis Makanan</h3>
+        <span>5 pertanyaan</span>
+      </div>
+      <!-- Q1 -->
+      <div class="q-row" id="qr1">
+        <div class="q-num-text">
+          <div class="q-num">1</div>
+          <div class="q-text">Saya memberikan anak makanan dengan menu seimbang (nasi/ubi/jagung/gandum, lauk, sayur, buah, dan susu) setiap hari.</div>
+        </div>
+        <div class="radio-grp" id="rg1">
+          <div class="radio-btn"><input type="radio" name="q1" value="4" id="q1ss"><label for="q1ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q1" value="3" id="q1s"><label for="q1s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q1" value="2" id="q1j"><label for="q1j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q1" value="1" id="q1tp"><label for="q1tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+      <!-- Q2 -->
+      <div class="q-row" id="qr2">
+        <div class="q-num-text">
+          <div class="q-num">2</div>
+          <div class="q-text">Saya memberikan anak makanan yang mengandung lemak (daging, ikan, telur, susu) setiap hari.</div>
+        </div>
+        <div class="radio-grp">
+          <div class="radio-btn"><input type="radio" name="q2" value="4" id="q2ss"><label for="q2ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q2" value="3" id="q2s"><label for="q2s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q2" value="2" id="q2j"><label for="q2j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q2" value="1" id="q2tp"><label for="q2tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+      <!-- Q3 -->
+      <div class="q-row" id="qr3">
+        <div class="q-num-text">
+          <div class="q-num">3</div>
+          <div class="q-text">Saya memberikan anak makanan yang mengandung karbohidrat (nasi, umbi-umbian, jagung, tepung/gandum, kacang-kacangan) setiap hari.</div>
+        </div>
+        <div class="radio-grp">
+          <div class="radio-btn"><input type="radio" name="q3" value="4" id="q3ss"><label for="q3ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q3" value="3" id="q3s"><label for="q3s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q3" value="2" id="q3j"><label for="q3j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q3" value="1" id="q3tp"><label for="q3tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+      <!-- Q4 -->
+      <div class="q-row" id="qr4">
+        <div class="q-num-text">
+          <div class="q-num">4</div>
+          <div class="q-text">Saya memberikan anak makanan yang mengandung protein (daging, ikan, telur, kacang-kacangan, susu) setiap hari.</div>
+        </div>
+        <div class="radio-grp">
+          <div class="radio-btn"><input type="radio" name="q4" value="4" id="q4ss"><label for="q4ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q4" value="3" id="q4s"><label for="q4s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q4" value="2" id="q4j"><label for="q4j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q4" value="1" id="q4tp"><label for="q4tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+      <!-- Q5 -->
+      <div class="q-row" id="qr5">
+        <div class="q-num-text">
+          <div class="q-num">5</div>
+          <div class="q-text">Saya memberikan anak makanan yang mengandung vitamin (buah dan sayur) setiap hari.</div>
+        </div>
+        <div class="radio-grp">
+          <div class="radio-btn"><input type="radio" name="q5" value="4" id="q5ss"><label for="q5ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q5" value="3" id="q5s"><label for="q5s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q5" value="2" id="q5j"><label for="q5j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q5" value="1" id="q5tp"><label for="q5tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 2: JUMLAH MAKANAN -->
+  <div class="page" id="page2">
+    <div class="sec-hd">
+      <div class="sec-icon">🍽️</div>
+      <div>
+        <h2>Jumlah Makanan</h2>
+        <p>Pertanyaan 6–10 · porsi yang diberikan</p>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot" style="background:var(--ss-bdr)"></div> SS = Sangat Sering (4)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--s-bdr)"></div> S = Sering (3)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--j-bdr)"></div> J = Jarang (2)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--tp-bdr)"></div> TP = Tidak Pernah (1)</div>
+    </div>
+
+    <div class="domain-card">
+      <div class="domain-head">
+        <div class="domain-badge jumlah">Jumlah</div>
+        <h3>Jumlah Makanan</h3>
+        <span>5 pertanyaan</span>
+      </div>
+      <!-- Q6 -->
+      <div class="q-row" id="qr6">
+        <div class="q-num-text">
+          <div class="q-num">6</div>
+          <div class="q-text">Saya memberikan anak saya makan nasi 1–3 piring/mangkok setiap hari.</div>
+        </div>
+        <div class="radio-grp">
+          <div class="radio-btn"><input type="radio" name="q6" value="4" id="q6ss"><label for="q6ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q6" value="3" id="q6s"><label for="q6s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q6" value="2" id="q6j"><label for="q6j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q6" value="1" id="q6tp"><label for="q6tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+      <!-- Q7 -->
+      <div class="q-row" id="qr7">
+        <div class="q-num-text">
+          <div class="q-num">7</div>
+          <div class="q-text">Saya memberikan anak lauk hewani (daging, ikan, telur, dsb.) 2–3 potong setiap hari.</div>
+        </div>
+        <div class="radio-grp">
+          <div class="radio-btn"><input type="radio" name="q7" value="4" id="q7ss"><label for="q7ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q7" value="3" id="q7s"><label for="q7s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q7" value="2" id="q7j"><label for="q7j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q7" value="1" id="q7tp"><label for="q7tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+      <!-- Q8 -->
+      <div class="q-row" id="qr8">
+        <div class="q-num-text">
+          <div class="q-num">8</div>
+          <div class="q-text">Saya memberikan anak lauk nabati (tahu, tempe, dsb.) 2–3 potong setiap hari.</div>
+        </div>
+        <div class="radio-grp">
+          <div class="radio-btn"><input type="radio" name="q8" value="4" id="q8ss"><label for="q8ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q8" value="3" id="q8s"><label for="q8s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q8" value="2" id="q8j"><label for="q8j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q8" value="1" id="q8tp"><label for="q8tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+      <!-- Q9 -->
+      <div class="q-row" id="qr9">
+        <div class="q-num-text">
+          <div class="q-num">9</div>
+          <div class="q-text">Anak saya menghabiskan semua makanan yang ada di piring/mangkok setiap kali makan.</div>
+        </div>
+        <div class="radio-grp">
+          <div class="radio-btn"><input type="radio" name="q9" value="4" id="q9ss"><label for="q9ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q9" value="3" id="q9s"><label for="q9s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q9" value="2" id="q9j"><label for="q9j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q9" value="1" id="q9tp"><label for="q9tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+      <!-- Q10 -->
+      <div class="q-row" id="qr10">
+        <div class="q-num-text">
+          <div class="q-num">10</div>
+          <div class="q-text">Saya memberikan anak saya makan buah 2–3 potong setiap hari.</div>
+        </div>
+        <div class="radio-grp">
+          <div class="radio-btn"><input type="radio" name="q10" value="4" id="q10ss"><label for="q10ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q10" value="3" id="q10s"><label for="q10s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q10" value="2" id="q10j"><label for="q10j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q10" value="1" id="q10tp"><label for="q10tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 3: FREKUENSI MAKAN -->
+  <div class="page" id="page3">
+    <div class="sec-hd">
+      <div class="sec-icon">⏰</div>
+      <div>
+        <h2>Frekuensi Makan</h2>
+        <p>Pertanyaan 11–15 · jadwal dan keteraturan</p>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot" style="background:var(--ss-bdr)"></div> SS = Sangat Sering (4)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--s-bdr)"></div> S = Sering (3)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--j-bdr)"></div> J = Jarang (2)</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--tp-bdr)"></div> TP = Tidak Pernah (1)</div>
+    </div>
+
+    <div class="domain-card">
+      <div class="domain-head">
+        <div class="domain-badge frek">Frekuensi</div>
+        <h3>Frekuensi Makan</h3>
+        <span>5 pertanyaan</span>
+      </div>
+      <!-- Q11 -->
+      <div class="q-row" id="qr11">
+        <div class="q-num-text">
+          <div class="q-num">11</div>
+          <div class="q-text">Saya memberikan makanan pada anak secara teratur 3 kali sehari (pagi, siang, sore/malam).</div>
+        </div>
+        <div class="radio-grp">
+          <div class="radio-btn"><input type="radio" name="q11" value="4" id="q11ss"><label for="q11ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q11" value="3" id="q11s"><label for="q11s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q11" value="2" id="q11j"><label for="q11j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q11" value="1" id="q11tp"><label for="q11tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+      <!-- Q12 -->
+      <div class="q-row" id="qr12">
+        <div class="q-num-text">
+          <div class="q-num">12</div>
+          <div class="q-text">Saya memberikan makanan selingan 1–2 kali sehari di antara makanan utama.</div>
+        </div>
+        <div class="radio-grp">
+          <div class="radio-btn"><input type="radio" name="q12" value="4" id="q12ss"><label for="q12ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q12" value="3" id="q12s"><label for="q12s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q12" value="2" id="q12j"><label for="q12j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q12" value="1" id="q12tp"><label for="q12tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+      <!-- Q13 -->
+      <div class="q-row" id="qr13">
+        <div class="q-num-text">
+          <div class="q-num">13</div>
+          <div class="q-text">Anak saya makan tepat waktu.</div>
+        </div>
+        <div class="radio-grp">
+          <div class="radio-btn"><input type="radio" name="q13" value="4" id="q13ss"><label for="q13ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q13" value="3" id="q13s"><label for="q13s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q13" value="2" id="q13j"><label for="q13j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q13" value="1" id="q13tp"><label for="q13tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+      <!-- Q14 -->
+      <div class="q-row" id="qr14">
+        <div class="q-num-text">
+          <div class="q-num">14</div>
+          <div class="q-text">Saya membuat jadwal makan anak.</div>
+        </div>
+        <div class="radio-grp">
+          <div class="radio-btn"><input type="radio" name="q14" value="4" id="q14ss"><label for="q14ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q14" value="3" id="q14s"><label for="q14s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q14" value="2" id="q14j"><label for="q14j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q14" value="1" id="q14tp"><label for="q14tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+      <!-- Q15 -->
+      <div class="q-row" id="qr15">
+        <div class="q-num-text">
+          <div class="q-num">15</div>
+          <div class="q-text">Saya memberikan makan anak tidak lebih dari 30 menit.</div>
+        </div>
+        <div class="radio-grp">
+          <div class="radio-btn"><input type="radio" name="q15" value="4" id="q15ss"><label for="q15ss">SS<span class="score-pill">4</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q15" value="3" id="q15s"><label for="q15s">S<span class="score-pill">3</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q15" value="2" id="q15j"><label for="q15j">J<span class="score-pill">2</span></label></div>
+          <div class="radio-btn"><input type="radio" name="q15" value="1" id="q15tp"><label for="q15tp">TP<span class="score-pill">1</span></label></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 4: HASIL -->
+  <div class="page" id="page4">
+    <div class="sec-hd">
+      <div class="sec-icon">📊</div>
+      <div>
+        <h2>Hasil Penilaian CFQ</h2>
+        <p id="res-nama-sub">Kuesioner Pola Pemberian Makan</p>
+      </div>
+    </div>
+
+    <div class="result-hero" id="resultHero">
+      <div class="score-big" id="resTotalScore">—</div>
+      <div class="score-of">dari 60 total skor</div>
+      <div class="result-cat" id="resCategory">—</div>
+      <div class="result-desc" id="resDesc">—</div>
+    </div>
+
+    <div class="domain-scores">
+      <div class="domain-score-row">
+        <div>
+          <div class="ds-label">🍱 Jenis Makanan</div>
+          <div class="ds-sub">Pertanyaan 1–5</div>
+        </div>
+        <div style="text-align:right">
+          <div><span class="ds-score" id="dsJenis">—</span> <span class="ds-max">/ 20</span></div>
+          <div class="ds-bar-wrap" style="margin-top:4px;margin-left:auto"><div class="ds-bar" id="barJenis" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="domain-score-row">
+        <div>
+          <div class="ds-label">🍽️ Jumlah Makanan</div>
+          <div class="ds-sub">Pertanyaan 6–10</div>
+        </div>
+        <div style="text-align:right">
+          <div><span class="ds-score" id="dsJumlah">—</span> <span class="ds-max">/ 20</span></div>
+          <div class="ds-bar-wrap" style="margin-top:4px;margin-left:auto"><div class="ds-bar" id="barJumlah" style="width:0%"></div></div>
+        </div>
+      </div>
+      <div class="domain-score-row">
+        <div>
+          <div class="ds-label">⏰ Frekuensi Makan</div>
+          <div class="ds-sub">Pertanyaan 11–15</div>
+        </div>
+        <div style="text-align:right">
+          <div><span class="ds-score" id="dsFrekuensi">—</span> <span class="ds-max">/ 20</span></div>
+          <div class="ds-bar-wrap" style="margin-top:4px;margin-left:auto"><div class="ds-bar" id="barFrekuensi" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rec-card">
+      <div class="rec-title">💡 Rekomendasi Tindak Lanjut</div>
+      <div id="recList"></div>
+    </div>
+
+    <div class="rec-card" style="background:var(--teal-pale);">
+      <div class="rec-title">📋 Catatan Klinis</div>
+      <textarea id="catatanKlinis" placeholder="Tambahkan catatan klinis di sini..." style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:inherit;font-size:13px;resize:vertical;min-height:80px;outline:none;background:var(--white);color:var(--text-1);"></textarea>
+    </div>
+
+    <button class="save-btn" onclick="simpanData()">💾 Simpan Hasil CFQ</button>
+  </div>
+
+</div><!-- /main -->
+
+<!-- ── NAV BAR ── -->
+<div class="nav-bar">
+  <button class="btn btn-outline" id="btnBack" onclick="goBack()" style="display:none">← Kembali</button>
+  <button class="btn btn-primary" id="btnNext" onclick="goNext()">Selanjutnya →</button>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<!-- ── SAVED RECORDS OVERLAY ── -->
+<div class="saved-overlay" id="savedOverlay">
+  <div class="saved-hd">
+    <div class="saved-hd-top">
+      <button class="saved-close" onclick="closeSaved()">←</button>
+      <div>
+        <h2>Data Tersimpan</h2>
+        <p>Riwayat hasil CFQ CANTIK UNJA</p>
+      </div>
+    </div>
+    <div class="saved-toolbar">
+      <input type="text" class="saved-search" id="savedSearch" placeholder="Cari nama balita / puskesmas..." oninput="renderSaved()">
+      <button class="saved-export-btn" id="exportAllBtn" onclick="exportAllExcel()">⬇️ Excel</button>
+    </div>
+  </div>
+  <div class="saved-body" id="savedBody"></div>
+</div>
+
+<!-- ── DETAIL MODAL ── -->
+<div class="detail-modal-bg" id="detailModalBg" onclick="if(event.target===this) closeDetail()">
+  <div class="detail-modal">
+    <div class="detail-modal-hd">
+      <h3 id="detailTitle">Detail Hasil</h3>
+      <button class="detail-modal-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-modal-body" id="detailBody"></div>
+  </div>
+</div>
+
+<script>
+let currentPage = 0;
+const totalPages = 5;
+
+// ── USIA ──
+function hitungUsia() {
+  const l = document.getElementById('tglLahir').value;
+  const p = document.getElementById('tglPeriksa').value;
+  if (!l || !p) return;
+  const lahir = new Date(l), periksa = new Date(p);
+  let bulan = (periksa.getFullYear() - lahir.getFullYear()) * 12 + (periksa.getMonth() - lahir.getMonth());
+  if (periksa.getDate() < lahir.getDate()) bulan--;
+  if (bulan < 0) { document.getElementById('usiaField').value = 'Tanggal tidak valid'; return; }
+  const thn = Math.floor(bulan / 12), bln = bulan % 12;
+  document.getElementById('usiaField').value = thn > 0 ? `${thn} thn ${bln} bln (${bulan} bulan)` : `${bulan} bulan`;
+}
+
+// ── STEP BAR ──
+function updateStepBar(pg) {
+  for (let i = 0; i < 5; i++) {
+    const seg = document.getElementById('seg' + i);
+    const lbl = document.getElementById('lbl' + i);
+    seg.className = 'step-seg' + (i < pg ? ' done' : i === pg ? ' active' : '');
+    lbl.className = 'step-lbl' + (i === pg ? ' active' : '');
+  }
+}
+
+// ── NAV ──
+function showPage(pg) {
+  document.querySelectorAll('.page').forEach((el, i) => {
+    el.classList.toggle('active', i === pg);
+  });
+  document.getElementById('btnBack').style.display = pg === 0 ? 'none' : 'block';
+  document.getElementById('btnNext').textContent = pg === 3 ? 'Lihat Hasil →' : pg === 4 ? '' : 'Selanjutnya →';
+  document.getElementById('btnNext').style.display = pg === 4 ? 'none' : 'block';
+  updateStepBar(pg);
+  window.scrollTo(0, 0);
+}
+
+function getVal(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? parseInt(el.value) : null;
+}
+
+function validatePage(pg) {
+  if (pg === 0) {
+    if (!document.getElementById('namaBalita').value.trim()) { showToast('Masukkan nama balita'); return false; }
+    if (!document.getElementById('jenisKelamin').value) { showToast('Pilih jenis kelamin'); return false; }
+    if (!document.getElementById('tglLahir').value) { showToast('Isi tanggal lahir'); return false; }
+    if (!document.getElementById('tglPeriksa').value) { showToast('Isi tanggal periksa'); return false; }
+    return true;
+  }
+  const ranges = { 1:[1,5], 2:[6,10], 3:[11,15] };
+  if (ranges[pg]) {
+    const [a, b] = ranges[pg];
+    let missing = [];
+    for (let q = a; q <= b; q++) {
+      const row = document.getElementById('qr'+q);
+      if (getVal('q'+q) === null) { missing.push(q); row.classList.add('unanswered'); }
+      else row.classList.remove('unanswered');
+    }
+    if (missing.length) { showToast(`Belum dijawab: pertanyaan ${missing.join(', ')}`); return false; }
+  }
+  return true;
+}
+
+function goNext() {
+  if (!validatePage(currentPage)) return;
+  if (currentPage === 3) { buildResult(); }
+  if (currentPage < 4) { currentPage++; showPage(currentPage); }
+}
+function goBack() { if (currentPage > 0) { currentPage--; showPage(currentPage); } }
+
+// ── BUILD RESULT ──
+function buildResult() {
+  const jenis    = [1,2,3,4,5].reduce((s,q) => s + (getVal('q'+q)||0), 0);
+  const jumlah   = [6,7,8,9,10].reduce((s,q) => s + (getVal('q'+q)||0), 0);
+  const frekuensi= [11,12,13,14,15].reduce((s,q) => s + (getVal('q'+q)||0), 0);
+  const total    = jenis + jumlah + frekuensi;
+
+  // Category: Baik ≥45, Cukup 30–44, Kurang <30
+  let cat, catDesc, catColor;
+  if (total >= 45) {
+    cat = 'Pola Makan Baik'; catColor = '#1B6B5A';
+    catDesc = 'Pola pemberian makan sudah optimal — pertahankan kebiasaan baik ini.';
+  } else if (total >= 30) {
+    cat = 'Pola Makan Cukup'; catColor = '#C97B2A';
+    catDesc = 'Pola pemberian makan perlu ditingkatkan di beberapa aspek.';
+  } else {
+    cat = 'Pola Makan Kurang'; catColor = '#D85A30';
+    catDesc = 'Pola pemberian makan masih jauh dari optimal — diperlukan intervensi segera.';
+  }
+
+  document.getElementById('resTotalScore').textContent = total;
+  document.getElementById('resCategory').textContent = cat;
+  document.getElementById('resCategory').style.background = catColor + '33';
+  document.getElementById('resDesc').textContent = catDesc;
+  document.getElementById('resultHero').style.background = catColor;
+
+  document.getElementById('dsJenis').textContent = jenis;
+  document.getElementById('dsJumlah').textContent = jumlah;
+  document.getElementById('dsFrekuensi').textContent = frekuensi;
+
+  const nama = document.getElementById('namaBalita').value || 'Anak';
+  document.getElementById('res-nama-sub').textContent = nama + ' · ' + (document.getElementById('usiaField').value || '');
+
+  setTimeout(() => {
+    document.getElementById('barJenis').style.width    = (jenis/20*100) + '%';
+    document.getElementById('barJumlah').style.width   = (jumlah/20*100) + '%';
+    document.getElementById('barFrekuensi').style.width= (frekuensi/20*100) + '%';
+  }, 200);
+
+  // Rekomendasi
+  const recs = [];
+  if (jenis < 15) recs.push('Tingkatkan variasi jenis makanan — pastikan menu harian mencakup karbohidrat, protein, lemak, vitamin (buah & sayur), dan susu/produk susu.');
+  if (jumlah < 15) recs.push('Perhatikan porsi makan — nasi 1–3 piring/hari, lauk hewani & nabati 2–3 potong/hari, serta buah 2–3 potong/hari sesuai anjuran PMBA.');
+  if (frekuensi < 15) recs.push('Buat jadwal makan yang teratur 3 kali sehari dengan selingan 1–2 kali; pastikan anak makan tepat waktu dan tidak melebihi 30 menit.');
+  if (total >= 45) recs.push('Lanjutkan pemantauan pola makan rutin setiap bulan di Posyandu; dokumentasikan kemajuan tumbuh kembang anak.');
+  if (total < 30) recs.push('Konsultasikan dengan ahli gizi Puskesmas untuk penyusunan menu MPASI/makanan anak yang sesuai kebutuhan gizi dan kondisi lokal.');
+  recs.push('Catat hasil CFQ ini pada buku KIA dan rekam medis CANTIK UNJA untuk pemantauan longitudinal risiko stunting.');
+
+  document.getElementById('recList').innerHTML = recs.map(r =>
+    `<div class="rec-item"><div class="rec-dot"></div><div>${r}</div></div>`
+  ).join('');
+
+  // simpan hasil perhitungan untuk digunakan saat "Simpan Hasil CFQ"
+  window.lastResult = { jenis, jumlah, frekuensi, total, kategori: cat, rekomendasi: recs };
+}
+
+/* ══════════════ MENU TERSIMPAN (localStorage) ══════════════ */
+const STORAGE_KEY = 'cfqCantikUnjaRecords';
+
+function loadRecords() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch (e) { return []; }
+}
+function saveRecords(arr) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  updateSavedCount();
+}
+function updateSavedCount() {
+  const n = loadRecords().length;
+  const el = document.getElementById('savedCount');
+  if (el) el.textContent = n;
+  const btn = document.getElementById('exportAllBtn');
+  if (btn) btn.disabled = n === 0;
+}
+
+function simpanData() {
+  if (!window.lastResult) { showToast('Selesaikan kuesioner terlebih dahulu'); return; }
+  const r = window.lastResult;
+  const record = {
+    id: 'cfq_' + Date.now(),
+    namaBalita: document.getElementById('namaBalita').value || '-',
+    jenisKelamin: document.getElementById('jenisKelamin').value === 'L' ? 'Laki-laki' : (document.getElementById('jenisKelamin').value === 'P' ? 'Perempuan' : '-'),
+    tglLahir: document.getElementById('tglLahir').value || '-',
+    tglPeriksa: document.getElementById('tglPeriksa').value || '-',
+    usia: document.getElementById('usiaField').value || '-',
+    namaOtua: document.getElementById('namaOtua').value || '-',
+    puskesmas: document.getElementById('puskesmas').value || '-',
+    skorJenis: r.jenis,
+    skorJumlah: r.jumlah,
+    skorFrekuensi: r.frekuensi,
+    skorTotal: r.total,
+    kategori: r.kategori,
+    rekomendasi: r.rekomendasi.join(' | '),
+    catatanKlinis: document.getElementById('catatanKlinis').value || '-',
+    disimpanPada: new Date().toLocaleString('id-ID')
+  };
+  const arr = loadRecords();
+  arr.unshift(record);
+  saveRecords(arr);
+
+  showToast('✅ Data CFQ berhasil disimpan!');
+  setTimeout(() => showToast('📂 Tersimpan di rekam medis CANTIK UNJA'), 2200);
+}
+
+function openSaved() {
+  document.getElementById('savedOverlay').classList.add('show');
+  document.getElementById('savedSearch').value = '';
+  renderSaved();
+}
+function closeSaved() {
+  document.getElementById('savedOverlay').classList.remove('show');
+}
+
+const catColorMap = {
+  'Pola Makan Baik':   { bg: 'var(--ss-bg)',  txt: 'var(--ss-txt)' },
+  'Pola Makan Cukup':  { bg: 'var(--amber-l)',txt: 'var(--amber)'  },
+  'Pola Makan Kurang': { bg: 'var(--tp-bg)',  txt: 'var(--tp-txt)' }
+};
+
+function renderSaved() {
+  const q = (document.getElementById('savedSearch').value || '').toLowerCase().trim();
+  const arr = loadRecords().filter(rec =>
+    !q || rec.namaBalita.toLowerCase().includes(q) || rec.puskesmas.toLowerCase().includes(q) || rec.namaOtua.toLowerCase().includes(q)
+  );
+  const body = document.getElementById('savedBody');
+  updateSavedCount();
+
+  if (!arr.length) {
+    body.innerHTML = `<div class="saved-empty"><div class="ic">🗂️</div><p>${loadRecords().length ? 'Tidak ada hasil yang cocok dengan pencarian.' : 'Belum ada data tersimpan.<br>Isi kuesioner CFQ dan tekan "Simpan Hasil CFQ".'}</p></div>`;
+    return;
+  }
+
+  body.innerHTML = arr.map(rec => {
+    const c = catColorMap[rec.kategori] || { bg: 'var(--border)', txt: 'var(--navy)' };
+    return `
+    <div class="saved-item">
+      <div class="saved-item-top">
+        <div>
+          <div class="saved-item-name">${escapeHtml(rec.namaBalita)}</div>
+          <div class="saved-item-sub">${escapeHtml(rec.usia)} · ${escapeHtml(rec.puskesmas)}</div>
+        </div>
+        <div class="saved-item-cat" style="background:${c.bg};color:${c.txt}">${rec.skorTotal}/60</div>
+      </div>
+      <div class="saved-item-meta">
+        <div>📅 <b>${escapeHtml(rec.tglPeriksa)}</b></div>
+        <div>${rec.kategori.replace('Pola Makan ', '')}</div>
+      </div>
+      <div class="saved-item-actions">
+        <button class="si-view" onclick="viewDetail('${rec.id}')">👁️ Lihat</button>
+        <button class="si-xlsx" onclick="exportOneExcel('${rec.id}')">⬇️ Excel</button>
+        <button class="si-del" onclick="deleteRecord('${rec.id}')">🗑️ Hapus</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function viewDetail(id) {
+  const rec = loadRecords().find(r => r.id === id);
+  if (!rec) return;
+  document.getElementById('detailTitle').textContent = rec.namaBalita;
+  document.getElementById('detailBody').innerHTML = `
+    <div class="detail-row"><span>Jenis Kelamin</span><span>${escapeHtml(rec.jenisKelamin)}</span></div>
+    <div class="detail-row"><span>Tanggal Lahir</span><span>${escapeHtml(rec.tglLahir)}</span></div>
+    <div class="detail-row"><span>Usia Saat Periksa</span><span>${escapeHtml(rec.usia)}</span></div>
+    <div class="detail-row"><span>Tanggal Periksa</span><span>${escapeHtml(rec.tglPeriksa)}</span></div>
+    <div class="detail-row"><span>Orang Tua/Pengasuh</span><span>${escapeHtml(rec.namaOtua)}</span></div>
+    <div class="detail-row"><span>Puskesmas</span><span>${escapeHtml(rec.puskesmas)}</span></div>
+    <div class="detail-row"><span>Skor Jenis Makanan</span><span>${rec.skorJenis} / 20</span></div>
+    <div class="detail-row"><span>Skor Jumlah Makanan</span><span>${rec.skorJumlah} / 20</span></div>
+    <div class="detail-row"><span>Skor Frekuensi Makan</span><span>${rec.skorFrekuensi} / 20</span></div>
+    <div class="detail-row"><span>Skor Total</span><span>${rec.skorTotal} / 60</span></div>
+    <div class="detail-row"><span>Kategori</span><span>${escapeHtml(rec.kategori)}</span></div>
+    <div class="detail-row"><span>Disimpan Pada</span><span>${escapeHtml(rec.disimpanPada)}</span></div>
+    <div class="detail-note"><b>Catatan Klinis:</b><br>${escapeHtml(rec.catatanKlinis)}</div>
+  `;
+  document.getElementById('detailModalBg').classList.add('show');
+}
+function closeDetail() {
+  document.getElementById('detailModalBg').classList.remove('show');
+}
+
+function deleteRecord(id) {
+  if (!confirm('Hapus data ini secara permanen?')) return;
+  const arr = loadRecords().filter(r => r.id !== id);
+  saveRecords(arr);
+  renderSaved();
+  showToast('🗑️ Data dihapus');
+}
+
+function recordsToSheetRows(arr) {
+  return arr.map(rec => ({
+    'Nama Balita': rec.namaBalita,
+    'Jenis Kelamin': rec.jenisKelamin,
+    'Tanggal Lahir': rec.tglLahir,
+    'Usia Saat Periksa': rec.usia,
+    'Tanggal Periksa': rec.tglPeriksa,
+    'Orang Tua/Pengasuh': rec.namaOtua,
+    'Puskesmas': rec.puskesmas,
+    'Skor Jenis Makanan (/20)': rec.skorJenis,
+    'Skor Jumlah Makanan (/20)': rec.skorJumlah,
+    'Skor Frekuensi Makan (/20)': rec.skorFrekuensi,
+    'Skor Total (/60)': rec.skorTotal,
+    'Kategori': rec.kategori,
+    'Rekomendasi': rec.rekomendasi,
+    'Catatan Klinis': rec.catatanKlinis,
+    'Disimpan Pada': rec.disimpanPada
+  }));
+}
+
+function downloadWorkbook(rows, filename) {
+  if (typeof XLSX === 'undefined') { showToast('Gagal memuat modul Excel. Cek koneksi internet.'); return; }
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [
+    {wch:18},{wch:12},{wch:13},{wch:16},{wch:13},{wch:18},{wch:16},
+    {wch:16},{wch:16},{wch:18},{wch:14},{wch:12},{wch:50},{wch:30},{wch:18}
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'CFQ CANTIK UNJA');
+  XLSX.writeFile(wb, filename);
+}
+
+function exportAllExcel() {
+  const arr = loadRecords();
+  if (!arr.length) { showToast('Belum ada data untuk diunduh'); return; }
+  downloadWorkbook(recordsToSheetRows(arr), `CFQ_CANTIK_UNJA_${new Date().toISOString().split('T')[0]}.xlsx`);
+  showToast('⬇️ Mengunduh data Excel...');
+}
+
+function exportOneExcel(id) {
+  const rec = loadRecords().find(r => r.id === id);
+  if (!rec) return;
+  const safeName = rec.namaBalita.replace(/[^a-z0-9]/gi, '_');
+  downloadWorkbook(recordsToSheetRows([rec]), `CFQ_${safeName}_${rec.tglPeriksa}.xlsx`);
+  showToast('⬇️ Mengunduh data Excel...');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// Init date
+document.getElementById('tglPeriksa').value = new Date().toISOString().split('T')[0];
+showPage(0);
+updateSavedCount();
+</script>
+</body>
+</html>
